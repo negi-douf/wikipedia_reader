@@ -15,10 +15,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ArticleViewModel(ArticleModel());
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Wikipedia Flutter')),
-        body: const Center(child: Text('Loading...')),
+        body: const Center(child: Text('Check console.')),
       ),
     );
   }
@@ -37,5 +39,34 @@ class ArticleModel {
     }
 
     return Summary.fromJson(jsonDecode(response.body) as Map<String, Object?>);
+  }
+}
+
+class ArticleViewModel extends ChangeNotifier {
+  final ArticleModel model;
+  Summary? summary;
+  Exception? error;
+  bool isLoading = false;
+
+  ArticleViewModel(this.model) {
+    fetchArticle();
+  }
+
+  Future<void> fetchArticle() async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      summary = await model.getRandomArticleSummary();
+      print('ロードした: ${summary!.titles.normalized}'); // temp
+      error = null; // エラーをクリア
+    } on HttpException catch (e) {
+      print('error: ${e.message}'); // temp
+      error = e;
+      summary = null;
+    }
+
+    isLoading = false;
+    notifyListeners();
   }
 }
